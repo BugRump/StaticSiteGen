@@ -12,7 +12,7 @@ class LeafNode(HTMLNode):
             return self.value
         
         props_str = self.props_to_html()
-        opening_tag = f'<{self.tag} {props_str}>'.strip()
+        opening_tag = f'<{self.tag}{props_str}>'.strip()
         closing_tag = f'</{self.tag}>'
         return f'{opening_tag}{self.value}{closing_tag}'
     

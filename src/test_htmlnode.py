@@ -2,6 +2,7 @@ import unittest
 from htmlnode import HTMLNode
 
 class TestHTMLNode(unittest.TestCase):
+    
     def test_htmlnode_creation(self):
         node = HTMLNode(tag='div', value='Hello World', props={'class': 'container'})
         self.assertEqual(node.tag, 'div')
@@ -16,5 +17,12 @@ class TestHTMLNode(unittest.TestCase):
 
     def test_props_to_html(self):
         node = HTMLNode(tag='span', value='', props={'style': 'color: red;', 'class': 'highlight'})
-        expected_props_html = 'style="color: red;" class="highlight"'
+        expected_props_html = ' style="color: red;" class="highlight"'
         self.assertEqual(node.props_to_html(), expected_props_html)
+    
+    def test_props_to_html_empty(self):
+        node = HTMLNode(tag='span', value='', props={})
+        self.assertEqual(node.props_to_html(), '')
+
+if __name__ == "__main__":
+    unittest.main()
