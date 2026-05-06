@@ -1,6 +1,6 @@
 import unittest
 
-from textnode import TextNode, TextType
+from textnode import *
 
 
 class TestTextNode(unittest.TestCase):
@@ -28,6 +28,24 @@ class TestTextNode(unittest.TestCase):
         url = "https://example.com"
         node = TextNode("This is a link", TextType.LINK, link_url=url)
         self.assertEqual(node.url, url)
+
+    def test_text(self):
+        node = TextNode("This is a text node", TextType.PLAIN)
+        html_node = text_node_to_html_node(node)
+        self.assertEqual(html_node.tag, None)
+        self.assertEqual(html_node.value, "This is a text node")    
+
+    def test_text_node_to_html_node(self):
+        node = TextNode("Hello", TextType.BOLD)
+        html = text_node_to_html_node(node)
+        self.assertEqual(html.tag, "b")
+        self.assertEqual(html.value, "Hello")
+
+        node = TextNode("Click here", TextType.LINK, link_url="https://example.com")
+        html = text_node_to_html_node(node)
+        self.assertEqual(html.tag, "a")
+        self.assertEqual(html.value, "Click here")
+        self.assertEqual(html.props, {"href": "https://example.com"})
 
 if __name__ == "__main__":
     unittest.main()
