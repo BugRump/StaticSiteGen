@@ -2,12 +2,22 @@ from enum import Enum
 from htmlnode import HTMLNode
 
 class TextType(Enum):
-    PLAIN = 1
+    TEXT = 1
     BOLD = 2
     ITALIC = 3
     CODE = 4
     LINK = 5
     IMAGE = 6
+
+markdown_delimiters = {
+    TextType.BOLD: "**",
+    TextType.ITALIC: "_",
+    TextType.CODE: "`",
+    TextType.LINK: "[]()",
+    TextType.IMAGE: "![]()",
+    "unordered_list": "- ",
+    "quote": "> ",
+}
 
 class TextNode:
     def __init__(self, text: str, text_type: TextType, link_url: str = None):
@@ -25,7 +35,7 @@ class TextNode:
     
 def text_node_to_html_node(text_node: TextNode):
     # create an HTMLNode based on the TextNode's type and content, use constructors for HTMLnode: (self, tag, value, children=None, props=None)
-    if text_node.text_type == TextType.PLAIN:
+    if text_node.text_type == TextType.TEXT:
         return HTMLNode(tag=None, value=text_node.text)
     elif text_node.text_type == TextType.BOLD:
         return HTMLNode(tag="b", value=text_node.text)
