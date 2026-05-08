@@ -2,21 +2,7 @@ from textnode import *
 from htmlnode import *
 from leafnode import *
 from parentnode import *
-
-# It takes a list of "old nodes", a delimiter, and a text type. It should return a new list of nodes, where any "text" type nodes in the input list are (potentially) split into multiple nodes based on the syntax. For example, given the following input:
-
-# node = TextNode("This is text with a `code block` word", TextType.TEXT)
-# new_nodes = split_nodes_delimiter([node], "`", TextType.CODE)
-
-# new_nodes then becomes:
-
-# [
-#     TextNode("This is text with a ", TextType.TEXT),
-#     TextNode("code block", TextType.CODE),
-#     TextNode(" word", TextType.TEXT),
-# ]
-
-# the .split() and .extemd() methods will be useful.
+import re
 
 def split_nodes_delimiter(old_nodes, delimiter, text_type):
     new_nodes = []
@@ -25,19 +11,20 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
             if not node.text.count(delimiter) % 2 == 0:
                 raise Exception(f"Unmatched delimiter '{delimiter}' in text: '{node.text}'")
         
-            parts = node.text.re.split((delimiter))
+            parts = re.split(rf"({re.escape(delimiter)})", node.text)
+
+            sig = False
 
             for part in parts:
-                sig = [False, 0]
                 if part == delimiter:
-                    if sig[1] % 2 == 0:
+                    if sig == False:
+                        sig = True
                         continue
                     else:
-                        sig[0] = True
+                        sig = False
                         continue
-                if sig:
-                    sig = False
-                    sig[1] += 1
+                
+                if sig == True:
                     new_nodes.append(TextNode(part, text_type))
                 else:
                     new_nodes.append(TextNode(part, TextType.TEXT))
@@ -45,3 +32,19 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
         else:
             new_nodes.append(node)
     return new_nodes
+
+# Parse text for links and images using regex. Takes raw markdown text and returns a list of tuples.
+
+def extract_markdown_images(text):
+    images = re.findall(r"!\[([^\[\]]*)\]\(([^\(\)]*)\)",text)
+    return images
+
+def extract_markdown_links(text):
+    links = re.findall(r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)",text)
+    return links
+
+# images mine: r"!\[(\w+)\]\((\w+)\)"
+# actual: r"!\[([^\[\]]*)\]\(([^\(\)]*)\)"
+
+# links mine: r"\[(\w+)\]\((\w+)\)"
+# actual: r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)"
