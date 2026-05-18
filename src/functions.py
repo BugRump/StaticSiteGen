@@ -43,8 +43,86 @@ def extract_markdown_links(text):
     links = re.findall(r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)",text)
     return links
 
-# images mine: r"!\[(\w+)\]\((\w+)\)"
-# actual: r"!\[([^\[\]]*)\]\(([^\(\)]*)\)"
+def split_nodes_image(old_nodes):
+    new_nodes = []
+    image_pattern = re.compile(r"(!\[[^\[\]]*\]\([^\(\)]*\))")
 
-# links mine: r"\[(\w+)\]\((\w+)\)"
-# actual: r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)"
+    for node in old_nodes:
+        if not isinstance(node, TextNode) or node.text_type != TextType.TEXT:
+            new_nodes.append(node)
+            continue
+
+        parts = image_pattern.split(node.text)
+        if len(parts) == 1:
+            new_nodes.append(node)
+            continue
+
+        for part in parts:
+            if not part:
+                continue
+
+            image_match = re.fullmatch(r"!\[([^\[\]]*)\]\(([^\(\)]*)\)", part)
+            if image_match:
+                alt_text, url = image_match.groups()
+                new_nodes.append(TextNode(alt_text, TextType.IMAGE, url))
+            else:
+                new_nodes.append(TextNode(part, TextType.TEXT))
+    return new_nodes
+
+def split_nodes_link(old_nodes):
+    new_nodes = []
+    link_pattern = re.compile(r"(?<!!)(\[[^\[\]]*\]\([^\(\)]*\))")
+
+    for node in old_nodes:
+        if not isinstance(node, TextNode) or node.text_type != TextType.TEXT:
+            new_nodes.append(node)
+            continue
+
+        parts = link_pattern.split(node.text)
+        if len(parts) == 1:
+            new_nodes.append(node)
+            continue
+
+        for part in parts:
+            if not part:
+                continue
+
+            link_match = re.fullmatch(r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)", part)
+            if link_match:
+                link_text, url = link_match.groups()
+                new_nodes.append(TextNode(link_text, TextType.LINK, url))
+            else:
+                new_nodes.append(TextNode(part, TextType.TEXT))
+
+    return new_nodes
+
+## Function that takes raw markdown text and makes use of all other split functions.
+
+#example input:
+# This is **text** with an _italic_ word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)
+
+
+# example output:
+#[
+#    TextNode("This is ", TextType.TEXT),
+#    TextNode("text", TextType.BOLD),
+#    TextNode(" with an ", TextType.TEXT),
+#    TextNode("italic", TextType.ITALIC),
+#    TextNode(" word and a ", TextType.TEXT),
+#    TextNode("code block", TextType.CODE),
+#    TextNode(" and an ", TextType.TEXT),
+#    TextNode("obi wan image", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg"),
+#    TextNode(" and a ", TextType.TEXT),
+#    TextNode("link", TextType.LINK, "https://boot.dev"),
+#]
+
+def text_to_textnodes(text):
+    new_nodes = []
+    node = TextNode(text, TextType.TEXT)
+    new_nodes = split_nodes_image([node])
+    new_nodes = split_nodes_link(new_nodes)
+    new_nodes = split_nodes_delimiter(new_nodes, "**", TextType.BOLD)
+    new_nodes = split_nodes_delimiter(new_nodes, "_", TextType.ITALIC)
+    new_nodes = split_nodes_delimiter(new_nodes, "`", TextType.CODE)
+    return new_nodes
+
