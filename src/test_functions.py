@@ -96,6 +96,62 @@ class TestFunctions(unittest.TestCase):
             new_nodes
         )
 
+    def test_markdown_to_blocks(self):
+        md = """
+This is **bolded** paragraph
+
+This is another paragraph with _italic_ text and `code` here
+This is the same paragraph on a new line
+
+- This is a list
+- with items
+"""
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(
+            blocks,
+            [
+                "This is **bolded** paragraph",
+                "This is another paragraph with _italic_ text and `code` here\nThis is the same paragraph on a new line",
+                "- This is a list\n- with items",
+            ],
+        )
+
+    def test_block_to_blocktype_heading(self):
+        self.assertEqual(
+            block_to_blocktype("## This is a heading"),
+            BlockType.HEADING,
+        )
+
+    def test_block_to_blocktype_code(self):
+        self.assertEqual(
+            block_to_blocktype("```\nprint('hello')\n```"),
+            BlockType.CODE,
+        )
+
+    def test_block_to_blocktype_quote(self):
+        self.assertEqual(
+            block_to_blocktype("> This is a quote\n> continuing quote"),
+            BlockType.QUOTE,
+        )
+
+    def test_block_to_blocktype_unordered_list(self):
+        self.assertEqual(
+            block_to_blocktype("- first item\n- second item"),
+            BlockType.UNORDERED_LIST,
+        )
+
+    def test_block_to_blocktype_ordered_list(self):
+        self.assertEqual(
+            block_to_blocktype("1. first item\n2. second item"),
+            BlockType.ORDERED_LIST,
+        )
+
+    def test_block_to_blocktype_paragraph(self):
+        self.assertEqual(
+            block_to_blocktype("This is a normal paragraph\nwith a second line."),
+            BlockType.PARAGRAPH,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

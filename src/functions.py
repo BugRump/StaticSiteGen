@@ -2,6 +2,7 @@ from textnode import *
 from htmlnode import *
 from leafnode import *
 from parentnode import *
+from blocktype import *
 import re
 
 def split_nodes_delimiter(old_nodes, delimiter, text_type):
@@ -32,8 +33,6 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
         else:
             new_nodes.append(node)
     return new_nodes
-
-# Parse text for links and images using regex. Takes raw markdown text and returns a list of tuples.
 
 def extract_markdown_images(text):
     images = re.findall(r"!\[([^\[\]]*)\]\(([^\(\)]*)\)",text)
@@ -96,26 +95,6 @@ def split_nodes_link(old_nodes):
 
     return new_nodes
 
-## Function that takes raw markdown text and makes use of all other split functions.
-
-#example input:
-# This is **text** with an _italic_ word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)
-
-
-# example output:
-#[
-#    TextNode("This is ", TextType.TEXT),
-#    TextNode("text", TextType.BOLD),
-#    TextNode(" with an ", TextType.TEXT),
-#    TextNode("italic", TextType.ITALIC),
-#    TextNode(" word and a ", TextType.TEXT),
-#    TextNode("code block", TextType.CODE),
-#    TextNode(" and an ", TextType.TEXT),
-#    TextNode("obi wan image", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg"),
-#    TextNode(" and a ", TextType.TEXT),
-#    TextNode("link", TextType.LINK, "https://boot.dev"),
-#]
-
 def text_to_textnodes(text):
     new_nodes = []
     node = TextNode(text, TextType.TEXT)
@@ -126,3 +105,34 @@ def text_to_textnodes(text):
     new_nodes = split_nodes_delimiter(new_nodes, "`", TextType.CODE)
     return new_nodes
 
+def markdown_to_blocks(markdown):
+    blocks = markdown.split("\n\n")
+    result = []
+    for block in blocks:
+        if block != "":
+            result.append(block.strip())
+    return result
+
+def block_to_blocktype(block):
+    new_lines = block.split("\n")
+    heading = new_lines[0].startswith(("# ", "## ", "### ", "#### ", "##### ", "###### "))
+    code = len(new_lines) > 1 and new_lines[0].startswith("```") and new_lines[-1].startswith("```")
+    quote = all(line.startswith(">") for line in new_lines)
+    un_list = all(line.startswith("- ") for line in new_lines)
+    ord_list = all(line.startswith(f"{i}. ") for i, line in enumerate(new_lines, start=1))
+
+    if heading:
+        return BlockType.HEADING
+    elif code:
+        return BlockType.CODE
+    elif quote:
+        return BlockType.QUOTE
+    elif un_list:
+        return BlockType.UNORDERED_LIST
+    elif ord_list:
+        return BlockType.ORDERED_LIST
+    else:
+        return BlockType.PARAGRAPH
+    
+def markdown_to_html_node(markdown):
+    pass
