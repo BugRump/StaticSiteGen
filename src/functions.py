@@ -7,11 +7,17 @@ import re
 
 def split_nodes_delimiter(old_nodes, delimiter, text_type):
     new_nodes = []
+    fenced_code_pattern = re.compile(r"```[\s\S]*?```")
+
     for node in old_nodes:
         if node.text_type == TextType.TEXT:
+            if fenced_code_pattern.fullmatch(node.text):
+                new_nodes.append(node)
+                continue
+
             if not node.text.count(delimiter) % 2 == 0:
                 raise Exception(f"Unmatched delimiter '{delimiter}' in text: '{node.text}'")
-        
+
             parts = re.split(rf"({re.escape(delimiter)})", node.text)
 
             sig = False
@@ -120,7 +126,7 @@ def block_to_blocktype(block):
     quote = all(line.startswith(">") for line in new_lines)
     un_list = all(line.startswith("- ") for line in new_lines)
     ord_list = all(line.startswith(f"{i}. ") for i, line in enumerate(new_lines, start=1))
-
+    
     if heading:
         return BlockType.HEADING
     elif code:
@@ -133,6 +139,96 @@ def block_to_blocktype(block):
         return BlockType.ORDERED_LIST
     else:
         return BlockType.PARAGRAPH
-    
+
+def text_to_children(text):
+    text_nodes = text_to_textnodes(text)
+    result = []
+    for node in text_nodes:
+        result.append(text_node_to_html_node(node))
+    return result
+
+def quote_strip(text):
+    lines = text.split("\n")
+    cleaned = []
+    for line in lines:
+        line = line.strip()
+        if line.startswith(">"):
+            line = line[1:].strip()
+        if line:
+            cleaned.append(line)
+    return " ".join(cleaned)
+
+def parse_list_items(text):
+    lines = text.split("\n")
+    cleaned = []
+    children = []
+    for i, line in enumerate(lines, start=1):
+        line = line.strip()
+        if line.startswith("-"):
+            line = line[1:].strip()
+        elif line.startswith(f"{i}."):
+            prefix_len = len(f"{i}.")
+            line = line[prefix_len:].strip()
+
+        if line:
+            cleaned.append(line)
+
+    for j in cleaned:
+        kids = text_to_children(j)
+        node = ParentNode("li", kids)
+        children.append(node)
+
+    return children
+
+def parse_code_block(text):
+    text = text.removeprefix("```\n")
+    text = text.removesuffix("```")
+    text_node = TextNode(text, TextType.TEXT)
+    child = LeafNode(None, text_node.text)
+    return child
+
 def markdown_to_html_node(markdown):
-    pass
+    markdown_blocks = markdown_to_blocks(markdown)
+    list = []
+
+    for block in markdown_blocks:
+        block_type = block_to_blocktype(block)
+
+        if block_type == BlockType.PARAGRAPH:
+            spaces = block.replace("\n", " ")
+            children = text_to_children(spaces)
+            node = ParentNode("p", children)
+            list.append(node)
+            continue
+        elif block_type == BlockType.HEADING:
+            split = block.split(" ", 1)
+            hash_count = len(split[0])
+            children = text_to_children(split[1])
+            node = ParentNode(f"h{hash_count}", children)
+            list.append(node)
+            continue
+        elif block_type == BlockType.CODE:
+            child = parse_code_block(block)
+            node = ParentNode("code", [child])
+            parent = ParentNode("pre", [node])
+            list.append(parent)
+            continue
+        elif block_type == BlockType.QUOTE:
+            stripped = quote_strip(block)
+            children = text_to_children(stripped)
+            node = ParentNode("blockquote", children)
+            list.append(node)
+            continue
+        elif block_type == BlockType.UNORDERED_LIST:
+            children = parse_list_items(block)
+            node = ParentNode("ul", children)
+            list.append(node)
+            continue
+        elif block_type == BlockType.ORDERED_LIST:
+            children = parse_list_items(block)
+            node = ParentNode("ol", children)
+            list.append(node)
+            continue
+    
+    
+    return ParentNode("div", list)
