@@ -1,7 +1,15 @@
-from textnode import *
+import os
+import shutil
+from copy_static import *
+
+static_dir = "./static"
+public_dir = "./public"
 
 def main():
-    print(TextNode("Big Butt Fire Truck", TextType.LINK, "https://www.joecartoon.com"))
+    recreate_dir(public_dir)
+    copy_tree(static_dir, public_dir)
+
+
 
 
 if __name__ == "__main__":
