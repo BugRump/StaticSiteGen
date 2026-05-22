@@ -4,6 +4,7 @@ from leafnode import *
 from parentnode import *
 from blocktype import *
 import re
+import os
 
 def split_nodes_delimiter(old_nodes, delimiter, text_type):
     new_nodes = []
@@ -232,3 +233,42 @@ def markdown_to_html_node(markdown):
     
     
     return ParentNode("div", list)
+
+def extract_title(markdown):
+    lines = markdown.split("\n")
+    hash_list = []
+    for line in lines:
+        if line.startswith("# "):
+            hash_list.append(line)
+    if len(hash_list) == 0:
+        raise Exception("No header contained within markdown text.")
+    return hash_list[0][1:].strip()
+
+def generate_page(from_path, template_path, dest_path):
+    print(f"Generating page from {from_path} to {dest_path} using {template_path}.")
+    html_template = ""
+    markdown_content = ""
+
+    with open(from_path, 'r') as markdown:
+        markdown_content = markdown.read()
+    
+    with open(template_path, 'r') as html:
+        html_template = html.read()
+
+    new_html = markdown_to_html_node(markdown_content)
+    new_html_string = new_html.to_html()
+
+    page_title = extract_title(markdown_content)
+
+    template = html_template.replace("{{ Title }}", page_title)
+    template = template.replace("{{ Content }}", new_html_string)
+
+    new_path = os.path.dirname(dest_path)
+    os.makedirs(new_path, exist_ok=True)
+
+    with open(dest_path, 'w') as new_content:
+        new_content.write(template)
+
+    
+
+

@@ -184,5 +184,49 @@ the **same** even with inline stuff
             "<div><pre><code>This is text that _should_ remain\nthe **same** even with inline stuff\n</code></pre></div>",
         )
 
+    def test_extract_title_with_title(self):
+        md = """
+# Lorem Ipsum Dolor Sit Amet
+
+Welcome to the **sample document** designed for parsing tests. 
+
+## Section Header
+This paragraph contains *italicized text* for testing formatting variation. 
+You can also find a standard [hyperlink to Example](https://example.com) here.
+
+Here is a linked image element:
+[![Alt text for the image](https://placeholder.com)](https://example.com)
+
+Thank you for testing this script.
+"""
+        test = extract_title(md)
+        self.assertEqual(
+            test,
+            "Lorem Ipsum Dolor Sit Amet"
+        )
+
+    def test_extract_title_without_title(self):
+        md = """
+## Section Header Without Main Title
+
+This file starts directly with a level-two header. 
+It contains **bold text** and *italics* immediately.
+
+* Item one in a list
+* Item two in a list
+
+Check this [direct link](https://example.org) to verify your regex logic.
+"""
+        with self.assertRaises(Exception) as test:
+            extract_title(md)
+
+        self.assertEqual(
+            str(test.exception),
+            "No header contained within markdown text."
+        )
+
+
+
+
 if __name__ == "__main__":
     unittest.main()
