@@ -14,9 +14,7 @@ markdown_delimiters = {
     TextType.ITALIC: "_",
     TextType.CODE: "`",
     TextType.LINK: "[]()",
-    TextType.IMAGE: "![]()",
-    "unordered_list": "- ",
-    "quote": "> ",
+    TextType.IMAGE: "![]()"
 }
 
 class TextNode:
@@ -34,7 +32,6 @@ class TextNode:
         return f"TextNode(text='{self.text}', text_type={self.text_type}, url='{self.url}')"
     
 def text_node_to_html_node(text_node: TextNode):
-    # create an HTMLNode based on the TextNode's type and content, use constructors for HTMLnode: (self, tag, value, children=None, props=None)
     if text_node.text_type == TextType.TEXT:
         return LeafNode(tag=None, value=text_node.text)
     elif text_node.text_type == TextType.BOLD:

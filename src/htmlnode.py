@@ -12,11 +12,6 @@ class HTMLNode:
 
     def to_html(self):
         raise NotImplementedError("Subclasses must implement to_html method")
-        #props_str = ' '.join(f'{key}="{value}"' for key, value in self.props.items())
-        #opening_tag = f'<{self.tag} {props_str}>'.strip()
-        #closing_tag = f'</{self.tag}>'
-        #children_html = ''.join(child.to_html() for child in self.children)
-        #return f'{opening_tag}{self.value}{children_html}{closing_tag}'
 
     def props_to_html(self):
         if self.props == None:
