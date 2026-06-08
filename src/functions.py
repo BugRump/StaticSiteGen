@@ -269,6 +269,23 @@ def generate_page(from_path, template_path, dest_path):
     with open(dest_path, 'w') as new_content:
         new_content.write(template)
 
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+    #This function should crawl every entry in the content directory ("./content").
+    #For each markdown file found, generate a new .html file using the same template.html (template_path). The generated pages should be written to the public directory in the same directory structure.
+    #Initially, the dir_path_content variable will be passed "./content" as the main directory. Likewise, dest_dir_path will begin as "./public". As recursive calls are made, these will need to be amended.
+    for entry in os.listdir(dir_path_content):
+        entry_path = os.path.join(dir_path_content, entry)
+        if os.path.isdir(entry_path):
+            new_dest_dir_path = os.path.join(dest_dir_path, entry)
+            generate_pages_recursive(entry_path, template_path, new_dest_dir_path)
+        elif entry.endswith(".md"):
+            dest_file_name = entry[:-3] + ".html"
+            dest_file_path = os.path.join(dest_dir_path, dest_file_name)
+            generate_page(entry_path, template_path, dest_file_path)
+    
+
+    
+
     
 
 
